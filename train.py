@@ -11,7 +11,7 @@ import boto3
 # Load the Iris dataset
 #url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
 names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'class']
-df = pd.read_csv("input_data.csv", names=names)
+df = pd.read_csv("input_data.csv",header=None, names=names)
 
 # Prepare the data
 X = df.drop('class', axis=1)
