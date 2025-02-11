@@ -14,7 +14,8 @@ names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'class']
 df = pd.read_csv("input_data.csv",header=None, names=names)
 
 # Convert feature columns to numeric type
-for column in names:
+col_names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width']
+for column in col_names:
     df[column] = pd.to_numeric(df[column], errors='coerce')
 
 # Drop any rows with NaN values that might have resulted from the conversion
