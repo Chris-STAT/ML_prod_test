@@ -9,6 +9,7 @@ import joblib
 import json
 import boto3
 
+print(f"XGBoost version for inference: {xgb.__version__}")
 # Load the Iris dataset
 #url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
 names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'class']
