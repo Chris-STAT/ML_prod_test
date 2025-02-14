@@ -5,15 +5,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import xgboost as xgb
 from sklearn.metrics import accuracy_score, classification_report
-import joblib
 import json
 import boto3
+import tarfile
 
-print(f"XGBoost version for inference: {xgb.__version__}")
+print(f"XGBoost version for training: {xgb.__version__}")
+
 # Load the Iris dataset
-#url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
 names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'class']
-df = pd.read_csv("input_data.csv",header=None, names=names)
+df = pd.read_csv("input_data.csv", header=None, names=names)
 
 # Convert feature columns to numeric type
 col_names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width']
@@ -45,13 +45,12 @@ y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 classification_rep = classification_report(y_test, y_pred, target_names=le.classes_)
 
-# Save the model
-joblib.dump(model, 'model.joblib')
+# Save the model in XGBoost format
+model.save_model('xgboost-model')
 
 # Create a tarball of the model
-import tarfile
 with tarfile.open('model.tar.gz', 'w:gz') as tar:
-    tar.add('model.joblib')
+    tar.add('xgboost-model')
 
 # Save metrics and evaluation results
 metrics = {'accuracy': accuracy}
