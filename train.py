@@ -6,14 +6,18 @@ from sklearn.preprocessing import LabelEncoder
 import xgboost as xgb
 from sklearn.metrics import accuracy_score, classification_report
 import json
-import boto3
-import tarfile
 
-print(f"XGBoost version for training: {xgb.__version__}")
+print(f"XGBoost version: {xgb.__version__}")
+
+# SageMaker specific directories
+prefix = '/opt/ml/'
+input_path = prefix + 'input/data'
+output_path = os.path.join(prefix, 'output')
+model_path = os.path.join(prefix, 'model')
 
 # Load the Iris dataset
 names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'class']
-df = pd.read_csv("input_data.csv", header=None, names=names)
+df = pd.read_csv(os.path.join(input_path, 'training', 'input_data.csv'), header=None, names=names)
 
 # Convert feature columns to numeric type
 col_names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width']
@@ -35,37 +39,52 @@ y = le.fit_transform(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train the model
-model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
-model.fit(X_train, y_train)
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dtest = xgb.DMatrix(X_test, label=y_test)
+
+params = {
+    'max_depth': 3,
+    'eta': 0.1,
+    'objective': 'multi:softprob',
+    'num_class': len(np.unique(y))
+}
+
+num_round = 100
+model = xgb.train(params, dtrain, num_round)
 
 # Make predictions
-y_pred = model.predict(X_test)
+y_pred = model.predict(dtest)
+y_pred_classes = np.argmax(y_pred, axis=1)
 
 # Evaluate the model
-accuracy = accuracy_score(y_test, y_pred)
-classification_rep = classification_report(y_test, y_pred, target_names=le.classes_)
+accuracy = accuracy_score(y_test, y_pred_classes)
+classification_rep = classification_report(y_test, y_pred_classes, target_names=le.classes_)
 
-# Save the model in XGBoost format
-model.save_model('xgboost-model')
+print(f"Accuracy: {accuracy}")
+print("Classification Report:")
+print(classification_rep)
 
-# Create a tarball of the model
-with tarfile.open('model.tar.gz', 'w:gz') as tar:
-    tar.add('xgboost-model')
+# Save the model
+os.makedirs(model_path, exist_ok=True)
+model_file = os.path.join(model_path, 'xgboost-model')
+model.save_model(model_file)
+
+# Save feature column names
+feature_columns = X.columns.tolist()
+with open(os.path.join(model_path, 'feature_columns.json'), 'w') as f:
+    json.dump(feature_columns, f)
+
+# Save label encoder classes
+with open(os.path.join(model_path, 'classes.json'), 'w') as f:
+    json.dump(le.classes_.tolist(), f)
 
 # Save metrics and evaluation results
-metrics = {'accuracy': accuracy}
-with open('metrics.json', 'w') as f:
+os.makedirs(output_path, exist_ok=True)
+metrics = {'accuracy': float(accuracy)}
+with open(os.path.join(output_path, 'metrics.json'), 'w') as f:
     json.dump(metrics, f)
 
-with open('evaluation_results.json', 'w') as f:
+with open(os.path.join(output_path, 'evaluation_results.json'), 'w') as f:
     json.dump({'classification_report': classification_rep}, f)
 
-# Upload to S3
-s3 = boto3.client('s3')
-model_artifacts_bucket = os.environ['MODEL_ARTIFACTS_BUCKET']
-
-s3.upload_file('model.tar.gz', model_artifacts_bucket, 'model.tar.gz')
-s3.upload_file('metrics.json', model_artifacts_bucket, 'metrics.json')
-s3.upload_file('evaluation_results.json', model_artifacts_bucket, 'evaluation_results.json')
-
-print("Training completed. Model and results uploaded to S3.")
+print("Training completed. Model and results saved.")
