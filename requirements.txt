@@ -9,5 +9,5 @@ xgboost==2.1.4
 pandas
 numpy
 scikit-learn
-joblib==
-boto3==1.28.81
+joblib
+boto3
