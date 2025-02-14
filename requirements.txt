@@ -5,9 +5,16 @@
 #xgboost==2.1.4
 #joblib==1.4.2
 #boto3==1.28.81
+#xgboost==1.5.1
+#pandas
+#numpy
+#scikit-learn
+#joblib
+#boto3
+# requirements.txt
+pandas==1.4.4  # Changed from 2.0.1 to be compatible with XGBoost 1.5.1
+numpy==1.21.0  # Changed to be compatible with pandas 1.4.4
+scikit-learn==1.0.2  # Changed to be compatible with the ecosystem
 xgboost==1.5.1
-pandas
-numpy
-scikit-learn
-joblib
-boto3
+joblib==1.4.2
+boto3==1.28.81
