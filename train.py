@@ -52,7 +52,14 @@ model.save_model('xgboost-model')
 with tarfile.open('model.tar.gz', 'w:gz') as tar:
     tar.add('xgboost-model')
 
-# Save metrics and evaluation results
+# Save the model in XGBoost format
+model.save_model('model')  # Changed from 'xgboost-model' to 'model'
+
+# Create a tarball of the model
+with tarfile.open('model.tar.gz', 'w:gz') as tar:
+    tar.add('model')  # Changed from 'xgboost-model' to 'model'
+
+# Rest of your code remains the same
 metrics = {'accuracy': accuracy}
 with open('metrics.json', 'w') as f:
     json.dump(metrics, f)
